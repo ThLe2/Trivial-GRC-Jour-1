@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trivial GRC — Jour 1 · TMK Performances</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;padding:18px 14px;font-family:Helvetica,Arial,sans-serif;background:#FAF6F8;
+     color:#3C3C3C;line-height:1.5;font-size:14px}
+.wrap{max-width:1180px;margin:0 auto}
+.head{background:#5E1349;color:#fff;border-radius:12px;padding:18px 22px;margin-bottom:16px}
+.head h1{margin:0;font-size:22px;letter-spacing:.3px}
+.head p{margin:4px 0 0;font-size:13px;opacity:.88}
+.card{background:#fff;border:1px solid #E8DCE5;border-radius:12px;padding:20px}
+h2{font-size:16px;color:#5E1349;margin:0 0 10px}
+.rule{background:#F4E6EE;border-left:4px solid #8C1E70;border-radius:0 8px 8px 0;
+      padding:12px 16px;font-size:13px;margin-bottom:18px}
+.rule b{color:#5E1349}
+.modes{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.btn{background:#8C1E70;color:#fff;border:0;border-radius:9px;padding:13px 26px;font-size:15px;
+     font-weight:700;font-family:inherit;cursor:pointer}
+.btn:hover{background:#5E1349}
+.btn:disabled{background:#c8bcc4;cursor:not-allowed}
+.btn-sec{background:#fff;color:#8C1E70;border:1.5px solid #8C1E70}
+.btn-sec:hover{background:#F4E6EE;color:#5E1349}
+.teams{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:14px 0 16px}
+.tf label{display:block;font-size:11px;font-weight:700;color:#8A7A85;text-transform:uppercase;
+          letter-spacing:.6px;margin-bottom:5px}
+.tf input{width:100%;padding:10px 12px;border:1.5px solid #E8DCE5;border-radius:8px;font-size:14px;
+          font-family:inherit;color:#3C3C3C}
+.tf input:focus{outline:none;border-color:#8C1E70}
+.nbsel{display:flex;gap:8px;align-items:center;margin-top:14px;font-size:13px;flex-wrap:wrap}
+.nbsel button{border:1.5px solid #E8DCE5;background:#fff;border-radius:8px;width:38px;height:38px;
+              font-size:15px;font-weight:700;font-family:inherit;color:#3C3C3C;cursor:pointer}
+.nbsel button.on{border-color:#8C1E70;background:#F4E6EE;color:#5E1349}
+.err{color:#B03A2E;font-size:13px;margin-top:10px;min-height:18px}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:8px;margin-top:16px;
+        padding-top:16px;border-top:1px solid #E8DCE5}
+.leg{display:flex;gap:9px;align-items:center;font-size:12.5px}
+.leg-dot{width:14px;height:14px;border-radius:50%;flex:0 0 14px}
+.game{display:grid;grid-template-columns:1fr 340px;gap:16px}
+@media(max-width:900px){.game{grid-template-columns:1fr}}
+.board{width:100%;height:auto;display:block}
+.case.active{stroke:#111;stroke-width:4}
+.pion{stroke:#fff;stroke-width:2.5;transition:cx .22s ease,cy .22s ease}
+.turn{border-radius:10px;padding:14px 16px;color:#fff;margin-bottom:12px;background:#8C1E70}
+.turn small{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.8px;opacity:.85}
+.turn b{font-size:19px}
+.dice-box{text-align:center;margin-bottom:12px}
+.dice{width:76px;height:76px;margin:0 auto 12px;border:3px solid #8C1E70;border-radius:14px;
+      display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:700;
+      color:#5E1349;background:#fff}
+.dice.roll{animation:sh .09s infinite}
+@keyframes sh{0%{transform:translate(-2px,1px) rotate(-3deg)}50%{transform:translate(2px,-1px) rotate(3deg)}100%{transform:translate(-1px,2px)}}
+.msg{background:#F4E6EE;border-radius:8px;padding:11px 14px;font-size:13px;text-align:center;
+     min-height:44px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.score{border:1px solid #E8DCE5;border-radius:10px;overflow:hidden}
+.score-h{background:#5E1349;color:#fff;padding:9px 13px;font-size:12px;font-weight:700;
+         text-transform:uppercase;letter-spacing:.7px}
+.row{display:flex;align-items:center;gap:9px;padding:9px 12px;border-bottom:1px solid #E8DCE5}
+.row:last-child{border-bottom:0}
+.row.on{background:#F4E6EE}
+.num{width:24px;height:24px;border-radius:50%;background:#3C3C3C;color:#fff;font-size:12px;
+     font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 24px}
+.row.on .num{background:#8C1E70}
+.nm{flex:1;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cams{display:flex;gap:3px}
+.cam{width:15px;height:15px;border-radius:50%;border:2px solid #d8cdd5;background:#fff}
+.modal{position:fixed;inset:0;background:rgba(30,10,25,.72);display:none;align-items:center;
+       justify-content:center;padding:16px;z-index:50}
+.modal.on{display:flex}
+.mbox{background:#fff;border-radius:14px;max-width:680px;width:100%;overflow:hidden;
+      max-height:92vh;overflow-y:auto}
+.mhead{padding:15px 22px;color:#fff;background:#5E1349}
+.mhead small{font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:.9}
+.mhead b{display:block;font-size:17px;margin-top:2px}
+.mbody{padding:20px 22px}
+.qtx{font-size:16px;font-weight:700;color:#5E1349;margin-bottom:16px;line-height:1.45}
+.opt{display:block;width:100%;text-align:left;background:#fff;border:1.5px solid #E8DCE5;
+     border-radius:9px;padding:12px 15px;margin-bottom:8px;font-size:14px;font-family:inherit;
+     color:#3C3C3C;cursor:pointer;line-height:1.4}
+.opt:hover:not(:disabled){border-color:#8C1E70;background:#F4E6EE}
+.opt:disabled{cursor:default}
+.opt.good{border-color:#2C7A4B;background:#E5F2EB;font-weight:700}
+.opt.bad{border-color:#B03A2E;background:#FBE5E5}
+.fb{border-radius:9px;padding:13px 16px;font-size:13.5px;margin-top:14px;display:none}
+.fb.on{display:block}
+.fb.ok{background:#E5F2EB;border-left:4px solid #2C7A4B}
+.fb.ko{background:#FBE5E5;border-left:4px solid #B03A2E}
+.fb b{display:block;margin-bottom:4px}
+.fb .theme{display:block;margin-top:8px;font-size:12px;color:#8A7A85}
+.cam-win{background:#FFF4D6;border-left:4px solid #B07A1E;border-radius:9px;padding:12px 16px;
+         font-size:13.5px;font-weight:700;color:#7A5310;margin-top:10px;display:none}
+.cam-win.on{display:block}
+.pod{display:flex;align-items:center;gap:12px;padding:12px 15px;border:1px solid #E8DCE5;
+     border-radius:9px;margin-bottom:8px}
+.pod.first{border-color:#8C1E70;background:#F4E6EE;border-width:2px}
+.rk{font-size:20px;font-weight:700;color:#8C1E70;width:32px}
+.pod-n{flex:1;font-weight:700;font-size:15px}
+.pod-s{font-size:12.5px;color:#8A7A85;text-align:right}
+.foot{text-align:center;font-size:11.5px;color:#8A7A85;margin-top:20px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="head">
+    <h1>Trivial GRC — Jour 1</h1>
+    <p>Gestion de la Relation Client · Fondamentaux de la journée 1 · TMK Performances</p>
+  </div>
+
+  <!-- ÉCRAN 1 -->
+  <div id="scr-setup" class="card">
+    <h2>Avant de commencer</h2>
+    <div class="rule">
+      <b>La règle du jeu.</b> On lance le dé, on avance sur le plateau et on répond à la question de la case
+      où l'on tombe. <b>Bonne réponse</b> → le camembert de la couleur est décroché (s'il manquait) et l'on
+      <b>rejoue</b>. <b>Mauvaise réponse</b> → en équipes, la main passe. Objectif : réunir les
+      <b>5 camemberts</b>. Le thème de la question n'est révélé qu'une fois la réponse donnée.
+    </div>
+    <div class="modes">
+      <button class="btn" id="btn-solo">Jouer seul</button>
+      <button class="btn btn-sec" id="btn-teams">Jouer en équipes</button>
+    </div>
+
+    <div id="team-setup" class="hide">
+      <div class="nbsel">
+        <span style="font-weight:700;color:#5E1349">Nombre d'équipes :</span>
+        <button data-n="2">2</button><button data-n="3">3</button>
+        <button data-n="4">4</button><button data-n="5" class="on">5</button>
+      </div>
+      <p style="font-size:13.5px;margin:12px 0 0">
+        À vous de choisir votre nom d'équipe — il restera affiché toute la partie.
+      </p>
+      <div class="teams" id="team-fields"></div>
+      <button class="btn" id="btn-start">Lancer la partie</button>
+      <div class="err" id="setup-err"></div>
+    </div>
+
+    <div class="legend"><div class="leg"><span class="leg-dot" style="background:#5E1349"></span><span><b>GR</b> · La GRC et la posture professionnelle</span></div><div class="leg"><span class="leg-dot" style="background:#2C7A4B"></span><span><b>VM</b> · La voix et le message</span></div><div class="leg"><span class="leg-dot" style="background:#8C1E70"></span><span><b>EE</b> · Écoute, empathie et reformulation</span></div><div class="leg"><span class="leg-dot" style="background:#2E5E8C"></span><span><b>LA</b> · Langage positif et assertivité</span></div><div class="leg"><span class="leg-dot" style="background:#B07A1E"></span><span><b>SA</b> · La structure de l'appel entrant</span></div></div>
+  </div>
+
+  <!-- ÉCRAN 2 -->
+  <div id="scr-game" class="hide">
+    <div class="game">
+      <div class="card">
+        <svg class="board" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="300" cy="300" r="292" fill="#fff" stroke="#E8DCE5" stroke-width="2"/>
+          <circle cx="300" cy="300" r="198" fill="#F4E6EE" stroke="#E8DCE5" stroke-width="1.5"/>
+          <circle class="case" id="case-0" cx="300.0" cy="54.0" r="28" fill="#5E1349" stroke="#3A0B2D" stroke-width="2"/><text x="300.0" y="59.0" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="Helvetica,Arial,sans-serif" pointer-events="none">GR</text>
+<circle class="case" id="case-1" cx="376.0" cy="66.0" r="28" fill="#2C7A4B" stroke="#1B4D2F" stroke-width="2"/><text x="376.0" y="71.0" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="Helvetica,Arial,sans-serif" pointer-events="none">VM</text>
+<circle class="case" id="case-2" cx="444.6" cy="101.0" r="28" fill="#8C1E70" stroke="#5E1349" stroke-width="2"/><text x="444.6" y="106.0" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="Helvetica,Arial,sans-serif" pointer-events="none">EE</text>
+<circle class="case" id="case-3" cx="499.0" cy="155.4" r="28" fill="#2E5E8C" stroke="#1C3C5C" stroke-width="2"/><text x="499.0" y="160.4" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="Helvetica,Arial,sans-serif" pointer-events="none">LA</text>
+<circle class="case" id="case-4" cx="534.0" cy="224.0" r="28" fill="#B07A1E" stroke="#7A5310" stroke-width="2"/><text x="534.0" y="229.0" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="Helvetica,Arial,sans-serif" pointer-events="none">SA</text>
+<circle class="case" id="case-5" cx="546.0" cy="300.0" r="28" fill="#5E1349" stroke="#3A0B2D" stroke-width="2"/><text x="546.0" y="305.0" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="Helvetica,Arial,sans-serif" pointer-events="none">GR</text>
+<circle class="case" id="case-6" cx="534.0" cy="376.0" r="28" fill="#2C7A4B" stroke="#1B4D2F" stroke-width="2"/><text x="534.0" y="381.0" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="Helvetica,Arial,sans-serif" pointer-events="none">VM</text>
+<circle class="case" id="case-7" cx="499.0" cy="444.6" r="28" fill="#8C1E70" stroke="#5E1349" stroke-width="2"/><text x="499.0" y="449.6" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="Helvetica,Arial,sans-serif" pointer-events="none">EE</text>
+<circle class="case" id="case-8" cx="444.6" cy="499.0" r="28" fill="#2E5E8C" stroke="#1C3C5C" stroke-width="2"/><text x="444.6" y="504.0" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="Helvetica,Arial,sans-serif" pointer-events="none">LA</text>
+<circle class="case" id="case-9" cx="376.0" cy="534.0" r="28" fill="#B07A1E" stroke="#7A5310" stroke-width="2"/><text x="376.0" y="539.0" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="Helvetica,Arial,sans-serif" pointer-events="none">SA</text>
+<circle class="case" id="case-10" cx="300.0" cy="546.0" r="28" fill="#5E1349" stroke="#3A0B2D" stroke-width="2"/><text x="300.0" y="551.0" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="Helvetica,Arial,sans-serif" pointer-events="none">GR</text>
+<circle class="case" id="case-11" cx="224.0" cy="534.0" r="28" fill="#2C7A4B" stroke="#1B4D2F" stroke-width="2"/><text x="224.0" y="539.0" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="Helvetica,Arial,sans-serif" pointer-events="none">VM</text>
+<circle class="case" id="case-12" cx="155.4" cy="499.0" r="28" fill="#8C1E70" stroke="#5E1349" stroke-width="2"/><text x="155.4" y="504.0" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="Helvetica,Arial,sans-serif" pointer-events="none">EE</text>
+<circle class="case" id="case-13" cx="101.0" cy="444.6" r="28" fill="#2E5E8C" stroke="#1C3C5C" stroke-width="2"/><text x="101.0" y="449.6" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="Helvetica,Arial,sans-serif" pointer-events="none">LA</text>
+<circle class="case" id="case-14" cx="66.0" cy="376.0" r="28" fill="#B07A1E" stroke="#7A5310" stroke-width="2"/><text x="66.0" y="381.0" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="Helvetica,Arial,sans-serif" pointer-events="none">SA</text>
+<circle class="case" id="case-15" cx="54.0" cy="300.0" r="28" fill="#5E1349" stroke="#3A0B2D" stroke-width="2"/><text x="54.0" y="305.0" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="Helvetica,Arial,sans-serif" pointer-events="none">GR</text>
+<circle class="case" id="case-16" cx="66.0" cy="224.0" r="28" fill="#2C7A4B" stroke="#1B4D2F" stroke-width="2"/><text x="66.0" y="229.0" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="Helvetica,Arial,sans-serif" pointer-events="none">VM</text>
+<circle class="case" id="case-17" cx="101.0" cy="155.4" r="28" fill="#8C1E70" stroke="#5E1349" stroke-width="2"/><text x="101.0" y="160.4" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="Helvetica,Arial,sans-serif" pointer-events="none">EE</text>
+<circle class="case" id="case-18" cx="155.4" cy="101.0" r="28" fill="#2E5E8C" stroke="#1C3C5C" stroke-width="2"/><text x="155.4" y="106.0" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="Helvetica,Arial,sans-serif" pointer-events="none">LA</text>
+<circle class="case" id="case-19" cx="224.0" cy="66.0" r="28" fill="#B07A1E" stroke="#7A5310" stroke-width="2"/><text x="224.0" y="71.0" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="Helvetica,Arial,sans-serif" pointer-events="none">SA</text>
+
+          <text x="300" y="292" text-anchor="middle" font-size="24" font-weight="700" fill="#5E1349">Trivial GRC</text>
+          <text x="300" y="320" text-anchor="middle" font-size="13" fill="#8C1E70">Jour 1</text>
+          <g id="pions"></g>
+        </svg>
+      </div>
+      <div>
+        <div class="turn" id="turn"><small>Au tour de</small><b id="turn-name">—</b></div>
+        <div class="dice-box">
+          <div class="dice" id="dice">?</div>
+          <button class="btn" id="btn-roll" style="width:100%">Lancer le dé</button>
+        </div>
+        <div class="msg" id="msg">À vous de jouer !</div>
+        <div class="score">
+          <div class="score-h">Camemberts</div>
+          <div id="score-rows"></div>
+        </div>
+        <button class="btn btn-sec" id="btn-reset" style="width:100%;margin-top:12px">Nouvelle partie</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN 3 -->
+  <div id="scr-win" class="card hide">
+    <h2 id="win-title">Partie terminée</h2>
+    <div id="podium"></div>
+    <button class="btn" id="btn-again" style="margin-top:10px">Rejouer</button>
+  </div>
+
+  <div class="foot">TMK Performances - N° Siret : 49841924100027 - Code NAF : 8559A</div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="mbox">
+    <div class="mhead"><small id="mkicker">Question</small><b id="mteam">—</b></div>
+    <div class="mbody">
+      <div class="qtx" id="qtx"></div>
+      <div id="opts"></div>
+      <div class="fb" id="fb"></div>
+      <div class="cam-win" id="camwin"></div>
+      <button class="btn hide" id="btn-next" style="width:100%;margin-top:14px">Continuer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const D = {"cats": {"GR": {"key": "GR", "label": "La GRC et la posture professionnelle", "color": "#5E1349", "dark": "#3A0B2D"}, "VM": {"key": "VM", "label": "La voix et le message", "color": "#2C7A4B", "dark": "#1B4D2F"}, "EE": {"key": "EE", "label": "Écoute, empathie et reformulation", "color": "#8C1E70", "dark": "#5E1349"}, "LA": {"key": "LA", "label": "Langage positif et assertivité", "color": "#2E5E8C", "dark": "#1C3C5C"}, "SA": {"key": "SA", "label": "La structure de l'appel entrant", "color": "#B07A1E", "dark": "#7A5310"}}, "order": ["GR", "VM", "EE", "LA", "SA"], "questions": {"GR": [{"q": "Que signifie l'acronyme GRC ?", "options": ["Gestion de la Relation Client", "Guide de la Réponse au Client", "Gestion des Réclamations Clients", "Gestion de la Relation Commerciale"], "correct": 0, "feedback": "GRC = Gestion de la Relation Client : l'ensemble des pratiques visant à gérer et optimiser la relation avec le client."}, {"q": "Dans les quatre postures du conseiller, quel rôle correspond au pilier « Les conseils » ?", "options": ["L'Expert", "L'Hôte", "Le Partenaire", "Le Technicien"], "correct": 0, "feedback": "L'Hôte pour l'accueil, l'Expert pour les conseils, le Partenaire pour la relation commerciale, le Technicien pour le support technique."}, {"q": "Quelle est la compétence clé de la posture « L'accueil » ?", "options": ["Esprit analytique et sang-froid", "Empathie et écoute active", "Force de proposition et persuasion", "Pédagogie et maîtrise du produit"], "correct": 1, "feedback": "L'accueil repose sur l'empathie et l'écoute active. Les trois autres compétences correspondent aux conseils, à la relation commerciale et au support technique."}, {"q": "Quel est le moment de vérité de la posture « L'accueil » ?", "options": ["La prise de décision et l'engagement final", "La phase d'exploration et de doute du client", "Les trente premières secondes du contact", "La gestion de crise et le service après-vente"], "correct": 2, "feedback": "Tout se joue dans les trente premières secondes : c'est là que se crée la première impression et que s'établit le lien."}, {"q": "Quel est l'objectif ultime de la GRC ?", "options": ["Conclure une vente à chaque contact avec le client", "Véhiculer une image positive et professionnelle", "Traiter le maximum d'appels dans une journée", "Réduire le nombre de réclamations enregistrées"], "correct": 1, "feedback": "La GRC ne se résume pas à des transactions : c'est l'art de projeter en continu une identité de marque irréprochable."}, {"q": "La fidélisation du client commence par :", "options": ["La vente additionnelle", "L'offre commerciale", "L'accueil", "Le traitement des réclamations"], "correct": 2, "feedback": "La fidélisation passe par vous et commence par l'accueil — c'est la première impression que le client aura de l'entreprise."}, {"q": "Dans l'iceberg de l'image professionnelle, que représente la fondation invisible ?", "options": ["L'attitude : écoute, disponibilité et sourire", "L'action : qualité du service et force de proposition", "L'apparence : tenue, posture et espace de travail", "L'expertise : maîtrise des produits et des process"], "correct": 2, "feedback": "L'apparence est la fondation invisible, l'attitude le point de contact, l'action ce que le client perçoit. L'excellence visible requiert une préparation invisible."}, {"q": "Sur la matrice réactif / proactif, quelle communication relève du proactif ?", "options": ["Rester disponible mais passif", "Être à l'écoute pour résoudre", "Tolérer le désordre ambiant", "Écouter pour répondre"], "correct": 1, "feedback": "Le réactif écoute pour répondre ; le proactif est à l'écoute pour résoudre. La nuance porte sur l'intention derrière l'écoute."}, {"q": "Que recouvre le pilier « La connexion » ?", "options": ["L'espace de travail et la posture", "La maîtrise des outils techniques", "La force de proposition commerciale", "L'écoute et la disponibilité"], "correct": 3, "feedback": "La connexion, c'est la boucle de l'empathie professionnelle : être disponible et à l'écoute. Ne pas entendre pour répondre, mais écouter pour comprendre."}, {"q": "À quelle phase du cycle client est associée la posture « Support technique » ?", "options": ["L'engagement et la décision", "L'évaluation du besoin client", "Le tout premier contact", "Le suivi et la fidélisation"], "correct": 3, "feedback": "Accueil → premier contact, conseils → évaluation, relation commerciale → engagement, support technique → suivi et fidélisation."}, {"q": "Quel est l'objectif principal de la posture « Relation commerciale » ?", "options": ["Proposer des solutions qui génèrent de la valeur mutuelle", "Résoudre les blocages et garantir la pérennité de l'usage", "Créer une première impression mémorable et établir le lien", "Éclairer le client et bâtir la confiance par le savoir"], "correct": 0, "feedback": "La relation commerciale vise la valeur mutuelle, avec la force de proposition pour compétence clé."}], "VM": [{"q": "Que signifie l'acronyme DIVA ?", "options": ["Dialogue, Intonation, Vigueur, Assertivité", "Débit, Intonation, Volume, Articulation", "Dynamisme, Impact, Voix, Attitude", "Discours, Implication, Volume, Amabilité"], "correct": 1, "feedback": "DIVA = Débit de paroles, Intonation, Volume, Articulation. Ce sont les quatre leviers de la voix au téléphone."}, {"q": "À quelle dimension de la communication se rattache DIVA ?", "options": ["La communication non verbale", "La communication écrite", "La communication verbale", "La communication paraverbale"], "correct": 3, "feedback": "DIVA relève du paraverbal : non pas ce que l'on dit, mais la manière dont la voix le porte."}, {"q": "Que recouvrent les 5P ?", "options": ["Présent, Persuasif, Positif, Précis, Pratique", "Précis, Proactif, Positif, Pondéré, Professionnel", "Précis, Présent, Positif, Personnalisé, Professionnel", "Patient, Poli, Positif, Précis, Performant"], "correct": 2, "feedback": "Les 5P définissent la qualité du message : Précis, Présent, Positif, Personnalisé, Professionnel."}, {"q": "Que recouvrent les 5C ?", "options": ["Chaleureux, Clair, Concis, Complet, Cohérent", "Calme, Clair, Concret, Complet, Chaleureux", "Court, Clair, Chaleureux, Complet, Convaincant", "Court, Concret, Concis, Complet, Cohérent"], "correct": 3, "feedback": "Les 5C définissent la structure du message : Court, Concret, Concis, Complet, Cohérent."}, {"q": "Comment s'écrit l'équation du succès ?", "options": ["DIVA + 5P + 5C", "DIVA + 4P + 5C", "DIVA + 5P + 3C", "5P + 5C + 3D"], "correct": 0, "feedback": "L'équation du succès combine la voix (DIVA), la qualité du message (5P) et sa structure (5C)."}, {"q": "Pourquoi le sourire compte-t-il au téléphone ?", "options": ["Il permet de parler nettement plus vite", "Il modifie la résonance vocale et l'inflexion", "Il dispense des formules de politesse", "Il n'a aucun effet puisqu'il est invisible"], "correct": 1, "feedback": "Le sourire s'entend : il modifie physiquement la résonance vocale et transmet une image positive même sans contact visuel."}, {"q": "Dans la situation d'accueil, à quoi correspond le savoir-être ?", "options": ["Au message verbal : le discours et la formulation", "Au message technique : procédures et outils", "Au message écrit : courriers et courriels", "Au message non verbal : attitude et comportement"], "correct": 3, "feedback": "Savoir-être = message non verbal (attitude et comportement). Savoir-faire = message verbal (discours et formulation)."}, {"q": "Lequel de ces obstacles à l'échange est d'origine cognitive ?", "options": ["Les incompréhensions", "Les différences de perception", "Les déperditions", "La mauvaise transmission"], "correct": 2, "feedback": "Les déperditions sont cognitives : attention limitée et oubli immédiat. La mauvaise transmission est physique, les deux autres sont psychologiques."}, {"q": "Quelle part du message initial le récepteur retient-il ?", "options": ["Environ la moitié", "Environ 25 %", "Moins de 5 %", "Près des trois quarts"], "correct": 2, "feedback": "Le message initial est systématiquement déformé avant d'atteindre sa cible : il en reste moins de 5 %."}, {"q": "Dans la mécanique de l'émission, qu'est-ce qui suit le message concis et précis ?", "options": ["La récapitulation", "Le silence", "L'ajustement par questions", "La réflexion et la synthèse"], "correct": 1, "feedback": "Émission : message concis et précis → silence (créer l'espace pour la réception) → écoute et ajustement → message modifié et complété."}, {"q": "Quel est l'objectif ultime de la communication active ?", "options": ["Aligner l'intention et la compréhension", "Transmettre le message le plus vite possible", "Convaincre l'interlocuteur du bien-fondé du message", "Limiter le nombre d'échanges nécessaires"], "correct": 0, "feedback": "La communication passe bien quand le récepteur comprend conformément aux intentions de l'émetteur. Le succès se mesure à ce qui est compris."}], "EE": [{"q": "Quelle est la définition de l'empathie ?", "options": ["Adhérer sans réserve aux idées de son interlocuteur", "Ressentir exactement les mêmes émotions que son interlocuteur", "Se mettre à la place d'autrui pour percevoir ce qu'il ressent", "Se ranger systématiquement au point de vue du client"], "correct": 2, "feedback": "L'empathie est la faculté intuitive de se mettre à la place d'autrui — sans partager ses émotions ni adhérer à ses idées."}, {"q": "Qu'est-ce qui distingue la sympathie de l'empathie ?", "options": ["La sympathie implique de partager les émotions de l'autre", "La sympathie suppose de garder une distance totale", "La sympathie se limite à un ton de voix chaleureux", "La sympathie consiste à reformuler les propos entendus"], "correct": 0, "feedback": "L'empathie comprend ce que ressent l'autre sans le vivre soi-même ; la sympathie partage ses émotions. Deux postures très différentes."}, {"q": "Laquelle de ces attitudes fait partie des quatre postures d'écoute ?", "options": ["Interrompre pour gagner du temps", "Interpréter ce qu'il n'a pas dit", "Laisser l'autre trouver sa solution", "Relativiser ce que vit le client"], "correct": 2, "feedback": "Les quatre postures : pratiquer l'empathie, reformuler, laisser l'autre trouver sa solution, refléter ses sentiments."}, {"q": "Laquelle de ces attitudes est à proscrire en relation client ?", "options": ["Reformuler", "Questionner", "Rassurer", "Moraliser"], "correct": 3, "feedback": "Faire la morale est perçu comme condescendant et irrespectueux — ce n'est pas le rôle du conseiller."}, {"q": "En quoi consiste la reformulation écho ?", "options": ["Faire une synthèse de l'idée conductrice du client", "Poser une série de questions ouvertes d'exploration", "Reprendre les propos avec les mêmes mots ou similaires", "Proposer directement une solution adaptée au client"], "correct": 2, "feedback": "L'écho reprend les mots du client (« Je comprends, vous… ») pour montrer l'écoute, laisser compléter et relancer. La résumée, elle, fait la synthèse."}, {"q": "Quel est le résultat attendu d'une reformulation résumée ?", "options": ["Montrer l'écoute, laisser compléter, relancer", "Détendre l'échange, créer du lien, rassurer", "Clore l'échange, acter l'accord, prendre congé", "Garder le fil, revenir à l'essentiel, recentrer"], "correct": 3, "feedback": "La reformulation résumée synthétise l'idée conductrice pour recentrer l'échange. Le second résultat est celui de la reformulation écho."}, {"q": "Quelle amorce annonce une reformulation résumée ?", "options": ["« Je comprends, vous… »", "« Au final… »", "« Dites-m'en davantage… »", "« Si je puis me permettre… »"], "correct": 1, "feedback": "Les mots de la résumée : « En résumé… », « Au final… », « Ce que vous venez de dire… ». Ceux de l'écho : « Je comprends, vous… »."}, {"q": "Par quoi toute reformulation doit-elle se terminer ?", "options": ["Une question de vérification", "Un rappel de la procédure", "Un engagement sur un délai", "Une proposition commerciale"], "correct": 0, "feedback": "« C'est bien cela ? » est indispensable : c'est ce qui valide votre compréhension auprès du client."}, {"q": "Qu'est-ce qui caractérise l'écoute active ?", "options": ["Savoir faire silence", "Compléter les phrases du client", "Anticiper la fin de son propos", "Recentrer dès les premiers mots"], "correct": 0, "feedback": "L'écoute active : pas d'idées préconçues, bienveillance, signes d'intérêt, silence actif, ne pas interrompre, reformuler."}, {"q": "Quelle différence y a-t-il entre entendre et écouter ?", "options": ["Les deux termes recouvrent exactement la même réalité", "Entendre porte sur le fond, écouter porte sur la forme", "Entendre suppose un réel effort, écouter reste spontané", "Entendre est passif, écouter suppose une attention active"], "correct": 3, "feedback": "Entendre, c'est percevoir le son. Écouter, c'est prêter volontairement attention à ce qui est dit — et à ce qui ne l'est pas."}, {"q": "« Je comprends que vous soyez frustré » relève de quelle posture ?", "options": ["Apporter une solution", "Refléter ses sentiments", "Justifier la procédure", "Relativiser la situation"], "correct": 1, "feedback": "Réverbérer les sentiments du client, c'est lui renvoyer ce qu'il ressent : la marque d'une écoute empathique."}], "LA": [{"q": "Pourquoi éviter la formule « pas de souci » ?", "options": ["Elle est construite sur une négation et installe le doute", "Elle relève de l'écrit plus que de la langue parlée", "Elle appartient à un registre trop familier au téléphone", "Elle est grammaticalement incorrecte en français courant"], "correct": 0, "feedback": "L'inconscient traite le mot « problème » avant la négation : la formule installe l'idée qu'elle prétend écarter."}, {"q": "Pourquoi la formule « je vais essayer » est-elle déconseillée ?", "options": ["Elle est perçue comme trop familière par le client pressé", "Elle sous-entend que le service pourrait ne pas être rendu", "Elle allonge inutilement la durée moyenne de l'appel", "Elle engage l'entreprise bien au-delà du raisonnable"], "correct": 1, "feedback": "Mieux vaut une formulation assertive et engageante : « Je m'en occupe », « Je traite votre demande »."}, {"q": "Qu'est-ce qu'être assertif ?", "options": ["Hausser le ton pour se faire entendre", "S'imposer fermement face à son interlocuteur", "S'abstenir de contredire le client", "S'affirmer de façon claire, précise et assurée"], "correct": 3, "feedback": "L'assertivité, c'est affirmer ses pensées, besoins et droits avec assurance — sans passivité ni agressivité."}, {"q": "Par quoi remplacer « ne vous inquiétez pas » ?", "options": ["« N'ayez aucune crainte »", "« Soyez rassuré »", "« Ce n'est pas si grave »", "« Il n'y a pas de problème »"], "correct": 1, "feedback": "« Ne vous inquiétez pas » active mentalement l'inquiétude. Offrir une assurance positive est bien plus efficace."}, {"q": "Par quoi remplacer « je ne peux rien faire d'autre » ?", "options": ["« Ce n'est pas de mon ressort »", "« Je n'ai malheureusement pas la main »", "« Voici ce que je peux faire pour vous »", "« Je ne dispose pas d'autre solution »"], "correct": 2, "feedback": "Mettre en avant ce qu'on peut faire plutôt que ce qu'on ne peut pas : c'est de la proactivité et du service."}, {"q": "Par quoi remplacer « vous n'êtes pas clair » ?", "options": ["« Je n'ai pas bien saisi ce que vous dites »", "« Ce n'est pas très compréhensible »", "« Vous ne vous exprimez pas clairement »", "« Pourriez-vous me préciser votre demande ? »"], "correct": 3, "feedback": "Formuler en « je » et en question ouverte évite de mettre le client en cause et maintient la posture d'écoute."}, {"q": "Par quoi remplacer « je ne suis pas d'accord » ?", "options": ["« Je vois les choses différemment »", "« Ce n'est pas la bonne analyse »", "« Vous faites fausse route »", "« Je ne partage pas votre avis »"], "correct": 0, "feedback": "Exprimer son désaccord en affirmant sa propre vision est plus constructif et moins frontal qu'une simple négation."}, {"q": "Pourquoi l'affirmation directe est-elle préférable à la négation ?", "options": ["La négation est mal comprise par les clients pressés", "La négation appartient à un registre jugé trop soutenu", "La négation crée une friction cognitive chez le récepteur", "La négation rallonge la durée moyenne des appels traités"], "correct": 2, "feedback": "L'inconscient filtre l'information : les constructions par la négation créent une friction, l'affirmation directe offre une clarté instantanée."}, {"q": "Par quoi remplacer « qu'est-ce qui ne vous plaît pas ? »", "options": ["« Qu'est-ce qui vous dérange exactement ? »", "« Où se situe précisément le problème ? »", "« Qu'est-ce qui ne va pas dans cette offre ? »", "« Qu'est-ce qui vous conviendrait mieux ? »"], "correct": 3, "feedback": "Orienter la question vers les souhaits du client plutôt que ses insatisfactions ouvre des perspectives d'amélioration."}, {"q": "Par quoi remplacer « je n'ai pas assez de temps pour le faire » ?", "options": ["« Je manque un peu de temps en ce moment précis »", "« Je prendrai le temps nécessaire pour le faire »", "« Je ne suis pas vraiment disponible aujourd'hui »", "« Je m'en occuperai dès que ce sera possible »"], "correct": 1, "feedback": "Reformuler en engagement positif rassure le client sur votre disponibilité et votre volonté d'agir."}, {"q": "Par quoi remplacer « je n'ai pas dit ça » ?", "options": ["« Ce que j'ai voulu dire, c'est… »", "« Vous m'avez visiblement mal compris »", "« Vous déformez un peu mes propos »", "« Ce n'est pas exactement ce que j'ai dit »"], "correct": 0, "feedback": "Prendre en charge la clarification sans pointer l'erreur de l'autre désamorce les tensions et garde le dialogue ouvert."}], "SA": [{"q": "Dans quel ordre se déroule un appel entrant ?", "options": ["Objet de l'appel → Prise de contact → Découverte → Réponse → Clôture", "Prise de contact → Objet de l'appel → Découverte → Réponse → Clôture", "Prise de contact → Objet de l'appel → Réponse → Découverte → Clôture", "Prise de contact → Découverte → Objet de l'appel → Réponse → Clôture"], "correct": 1, "feedback": "Chaque étape prépare la suivante : on ouvre, on identifie le motif, on approfondit, on répond, on clôt."}, {"q": "À quel moment la phrase de confidentialité est-elle prononcée ?", "options": ["Seulement si le client aborde un sujet sensible", "Après la présentation et avant la demande d'identité", "Juste avant de prendre congé à la fin de l'appel", "Au moment où l'on traite la demande du client"], "correct": 1, "feedback": "« Pour des raisons de qualité, notre conversation est susceptible d'être enregistrée » s'intercale entre la présentation et la demande d'identité."}, {"q": "Avant quelle sonnerie faut-il décrocher ?", "options": ["La quatrième", "La troisième", "La deuxième", "La cinquième"], "correct": 1, "feedback": "Décrocher rapidement, avant la troisième sonnerie : c'est le premier signe de disponibilité."}, {"q": "Combien de questions pose-t-on pour identifier l'objet de l'appel ?", "options": ["Une seule question ouverte, suivie d'un silence", "Trois questions successives pour gagner du temps", "Deux questions fermées pour cadrer la demande", "Autant de questions que nécessaire d'emblée"], "correct": 0, "feedback": "« Que puis-je faire pour vous ? » — puis silence actif. Une seule question suffit : l'approfondissement viendra à l'étape suivante."}, {"q": "Par quoi se termine la découverte de la demande ?", "options": ["Une prise de rendez-vous de suivi", "Un rappel des conditions générales", "Une proposition commerciale adaptée", "Une synthèse validée par le client"], "correct": 3, "feedback": "« Pour bien vous comprendre, vous souhaitez… C'est bien cela ? » : c'est le passage de « j'ai entendu » à « j'ai compris »."}, {"q": "Que fait-on du nom du client dès qu'il est connu ?", "options": ["On le note uniquement dans le dossier", "On le réserve à la formule de congé", "On l'utilise tout au long de l'échange", "On le répète à chaque fin de phrase"], "correct": 2, "feedback": "Le nom se note et se réemploie : c'est le premier levier de personnalisation de l'échange."}, {"q": "Que contient la présentation lors de la prise de contact ?", "options": ["Le nom de la société puis votre prénom", "Votre matricule puis le nom du service", "Le nom du service puis votre nom complet", "Votre nom de famille puis votre service"], "correct": 0, "feedback": "« [Nom de la société], bonjour, [votre prénom] à votre service. » La société d'abord, le prénom ensuite."}, {"q": "Quel est le rôle unique de l'étape « objet de l'appel » ?", "options": ["Vérifier l'identité du client", "Qualifier le dossier client", "Ouvrir la parole du client", "Annoncer le délai de traitement"], "correct": 2, "feedback": "Cette étape est volontairement courte et épurée : son seul rôle est d'ouvrir la parole du client."}, {"q": "À quelle étape passe-t-on de « j'ai entendu » à « j'ai compris » ?", "options": ["La clôture de l'appel", "La prise de contact", "La découverte de la demande", "L'identification de l'objet"], "correct": 2, "feedback": "La découverte est le cœur de l'appel entrant : plus elle est approfondie, plus la réponse sera juste."}, {"q": "Quelle posture adopter au moment de décrocher ?", "options": ["Une posture d'attente pour laisser parler", "Une posture formelle et distante", "Une posture neutre pour rester objectif", "Une posture physique et mentale positive"], "correct": 3, "feedback": "Sourire et voix assurée : la prise de contact donne le ton de tout l'appel."}, {"q": "Pendant que le client expose sa demande, que fait le conseiller ?", "options": ["Il pratique le silence actif et prend des notes", "Il reformule chaque phrase au fil de l'eau", "Il oriente la réponse dès les premiers mots", "Il consulte le dossier et interrompt si besoin"], "correct": 0, "feedback": "Silence actif, prise de notes, neutralité : on laisse le client s'exprimer sans anticiper ni orienter."}]}, "layout": ["GR", "VM", "EE", "LA", "SA", "GR", "VM", "EE", "LA", "SA", "GR", "VM", "EE", "LA", "SA", "GR", "VM", "EE", "LA", "SA"], "pos": [[300.0, 54.0], [376.0, 66.0], [444.6, 101.0], [499.0, 155.4], [534.0, 224.0], [546.0, 300.0], [534.0, 376.0], [499.0, 444.6], [444.6, 499.0], [376.0, 534.0], [300.0, 546.0], [224.0, 534.0], [155.4, 499.0], [101.0, 444.6], [66.0, 376.0], [54.0, 300.0], [66.0, 224.0], [101.0, 155.4], [155.4, 101.0], [224.0, 66.0]]};
+let NB = 5, S = null, solo = false;
+
+// ---------- SETUP ----------
+function drawFields(){
+  const tf = document.getElementById('team-fields');
+  tf.innerHTML = '';
+  for (let i = 0; i < NB; i++){
+    const d = document.createElement('div');
+    d.className = 'tf';
+    d.innerHTML = '<label>Équipe ' + (i+1) + '</label>' +
+      '<input type="text" id="tn-' + i + '" maxlength="24" placeholder="Nom choisi par l\'équipe">';
+    tf.appendChild(d);
+  }
+}
+document.querySelectorAll('.nbsel button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.nbsel button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    NB = parseInt(b.dataset.n, 10);
+    drawFields();
+  };
+});
+document.getElementById('btn-teams').onclick = () => {
+  document.getElementById('team-setup').classList.remove('hide');
+  drawFields();
+};
+document.getElementById('btn-solo').onclick = () => { solo = true; NB = 1; startGame(['Vous']); };
+document.getElementById('btn-start').onclick = () => {
+  const names = [];
+  for (let i = 0; i < NB; i++) names.push(document.getElementById('tn-' + i).value.trim());
+  const err = document.getElementById('setup-err');
+  if (names.some(n => n === '')) { err.textContent = 'Chaque équipe doit avoir un nom avant de commencer.'; return; }
+  if (new Set(names.map(n => n.toLowerCase())).size !== NB) {
+    err.textContent = 'Deux équipes portent le même nom — départagez-les.'; return; }
+  err.textContent = ''; solo = false; startGame(names);
+};
+
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+function startGame(names){
+  S = { teams: names.map(n => ({name:n, pos:0, cams:new Set(), ok:0, tot:0})),
+        cur: 0, busy: false, pool: {}, idx: {} };
+  D.order.forEach(k => { S.pool[k] = shuffle(D.questions[k].map((_, i) => i)); S.idx[k] = 0; });
+  document.getElementById('scr-setup').classList.add('hide');
+  document.getElementById('scr-win').classList.add('hide');
+  document.getElementById('scr-game').classList.remove('hide');
+  document.getElementById('turn').style.display = solo ? 'none' : 'block';
+  drawPions(); render();
+  document.getElementById('msg').textContent = 'À vous de jouer !';
+}
+
+// ---------- PIONS ----------
+function pionXY(i){
+  const p = D.pos[S.teams[i].pos];
+  if (S.teams.length === 1) return [p[0], p[1]];
+  const a = (i / S.teams.length) * 2 * Math.PI;
+  return [p[0] + 19 * Math.cos(a), p[1] + 19 * Math.sin(a)];
+}
+function drawPions(){
+  const g = document.getElementById('pions'); g.innerHTML = '';
+  S.teams.forEach((t, i) => {
+    const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('class','pion'); c.setAttribute('id','pion-'+i); c.setAttribute('r', 13);
+    const tx = document.createElementNS('http://www.w3.org/2000/svg','text');
+    tx.setAttribute('id','pt-'+i); tx.setAttribute('text-anchor','middle');
+    tx.setAttribute('font-size','12'); tx.setAttribute('font-weight','700');
+    tx.setAttribute('fill','#fff'); tx.setAttribute('pointer-events','none');
+    tx.textContent = S.teams.length === 1 ? '' : (i+1);
+    g.appendChild(c); g.appendChild(tx);
+  });
+  movePions();
+}
+function movePions(){
+  S.teams.forEach((t, i) => {
+    const [x, y] = pionXY(i);
+    const c = document.getElementById('pion-'+i), tx = document.getElementById('pt-'+i);
+    c.setAttribute('cx', x); c.setAttribute('cy', y);
+    c.setAttribute('fill', i === S.cur ? '#8C1E70' : '#3C3C3C');
+    c.setAttribute('r', i === S.cur ? 15 : 13);
+    tx.setAttribute('x', x); tx.setAttribute('y', y + 4.5);
+  });
+}
+
+// ---------- RENDU ----------
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function render(){
+  document.getElementById('turn-name').textContent = S.teams[S.cur].name;
+  const rows = document.getElementById('score-rows'); rows.innerHTML = '';
+  S.teams.forEach((t, i) => {
+    let cams = '';
+    D.order.forEach(k => {
+      const c = D.cats[k];
+      cams += '<div class="cam" style="' + (t.cams.has(k) ? 'background:'+c.color+';border-color:'+c.dark : '') +
+              '" title="' + c.label + '"></div>';
+    });
+    rows.innerHTML += '<div class="row' + (i === S.cur ? ' on' : '') + '">' +
+      (S.teams.length === 1 ? '' : '<div class="num">'+(i+1)+'</div>') +
+      '<div class="nm">' + esc(t.name) + '</div><div class="cams">' + cams + '</div></div>';
+  });
+  movePions();
+}
+
+// ---------- DÉ ----------
+document.getElementById('btn-roll').onclick = function(){
+  if (S.busy) return;
+  S.busy = true; this.disabled = true;
+  const dice = document.getElementById('dice');
+  dice.classList.add('roll');
+  const tick = setInterval(() => { dice.textContent = 1 + Math.floor(Math.random()*6); }, 70);
+  setTimeout(() => {
+    clearInterval(tick); dice.classList.remove('roll');
+    const v = 1 + Math.floor(Math.random()*6);
+    dice.textContent = v;
+    document.getElementById('msg').textContent =
+      (solo ? 'Vous avancez' : S.teams[S.cur].name + ' avance') + ' de ' + v + ' case' + (v>1?'s':'') + '.';
+    step(v);
+  }, 850);
+};
+function step(left){
+  if (left === 0){ arrive(); return; }
+  S.teams[S.cur].pos = (S.teams[S.cur].pos + 1) % D.layout.length;
+  movePions();
+  setTimeout(() => step(left-1), 230);
+}
+function arrive(){
+  const idx = S.teams[S.cur].pos;
+  document.querySelectorAll('.case').forEach(c => c.classList.remove('active'));
+  document.getElementById('case-'+idx).classList.add('active');
+  setTimeout(() => openQ(D.layout[idx]), 320);
+}
+
+// ---------- QUESTION ----------
+let pending = null;
+function openQ(key){
+  if (S.idx[key] >= D.questions[key].length){ S.pool[key] = shuffle(S.pool[key]); S.idx[key] = 0; }
+  const q = D.questions[key][S.pool[key][S.idx[key]++]];
+  pending = {key: key, q: q};
+
+  document.getElementById('mkicker').textContent = 'Question';
+  document.getElementById('mteam').textContent = solo ? 'À vous' : S.teams[S.cur].name;
+  document.getElementById('qtx').textContent = q.q;
+  document.getElementById('fb').className = 'fb';
+  document.getElementById('camwin').className = 'cam-win';
+  document.getElementById('btn-next').classList.add('hide');
+
+  const box = document.getElementById('opts'); box.innerHTML = '';
+  q.options.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'opt'; b.textContent = String.fromCharCode(65+i) + '.  ' + o;
+    b.onclick = () => answer(i);
+    box.appendChild(b);
+  });
+  document.getElementById('modal').classList.add('on');
+}
+
+function answer(i){
+  const q = pending.q, key = pending.key, t = S.teams[S.cur];
+  document.querySelectorAll('#opts .opt').forEach((b, j) => {
+    b.disabled = true;
+    if (j === q.correct) b.classList.add('good');
+    else if (j === i) b.classList.add('bad');
+  });
+  const good = (i === q.correct);
+  t.tot++; if (good) t.ok++;
+
+  const fb = document.getElementById('fb');
+  fb.className = 'fb on ' + (good ? 'ok' : 'ko');
+  fb.innerHTML = '<b>' + (good ? 'Bonne réponse' : 'Réponse incorrecte') + '</b>' + esc(q.feedback) +
+                 '<span class="theme">Thème : ' + esc(D.cats[key].label) + '</span>';
+
+  if (good && !t.cams.has(key)){
+    t.cams.add(key);
+    const cw = document.getElementById('camwin');
+    cw.textContent = 'Camembert « ' + D.cats[key].label + ' » décroché !';
+    cw.className = 'cam-win on';
+  }
+  pending.good = good;
+  render();
+  document.getElementById('btn-next').classList.remove('hide');
+}
+
+document.getElementById('btn-next').onclick = function(){
+  document.getElementById('modal').classList.remove('on');
+  const t = S.teams[S.cur];
+  if (t.cams.size === D.order.length){ win(); return; }
+  const msg = document.getElementById('msg');
+  if (pending.good || solo){
+    msg.textContent = solo ? 'Relancez le dé.' : t.name + ' rejoue !';
+  } else {
+    S.cur = (S.cur + 1) % S.teams.length;
+    msg.textContent = 'Au tour de ' + S.teams[S.cur].name + '.';
+  }
+  S.busy = false;
+  document.getElementById('btn-roll').disabled = false;
+  document.getElementById('dice').textContent = '?';
+  render();
+};
+
+// ---------- FIN ----------
+function win(){
+  const rank = S.teams.slice().sort((a,b) =>
+    b.cams.size - a.cams.size || (b.tot ? b.ok/b.tot : 0) - (a.tot ? a.ok/a.tot : 0));
+  document.getElementById('win-title').textContent =
+    solo ? 'Les 5 camemberts sont réunis !' : rank[0].name + ' remporte la partie !';
+  const p = document.getElementById('podium'); p.innerHTML = '';
+  rank.forEach((t, i) => {
+    const pct = t.tot ? Math.round(100*t.ok/t.tot) : 0;
+    p.innerHTML += '<div class="pod' + (i===0 ? ' first' : '') + '">' +
+      (solo ? '' : '<div class="rk">'+(i+1)+'</div>') +
+      '<div class="pod-n">' + esc(t.name) + '</div>' +
+      '<div class="pod-s">' + t.cams.size + ' / 5 camemberts<br>' + t.ok + ' / ' + t.tot +
+      ' bonnes réponses (' + pct + ' %)</div></div>';
+  });
+  document.getElementById('scr-game').classList.add('hide');
+  document.getElementById('scr-win').classList.remove('hide');
+}
+function back(){
+  document.getElementById('scr-game').classList.add('hide');
+  document.getElementById('scr-win').classList.add('hide');
+  document.getElementById('scr-setup').classList.remove('hide');
+  document.getElementById('team-setup').classList.add('hide');
+  document.getElementById('dice').textContent = '?';
+  document.getElementById('btn-roll').disabled = false;
+  solo = false;
+}
+document.getElementById('btn-reset').onclick = back;
+document.getElementById('btn-again').onclick = back;
+</script>
+</body>
+</html>
