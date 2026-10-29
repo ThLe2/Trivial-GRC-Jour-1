@@ -257,7 +257,7 @@ function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.rando
 
 function startGame(names){
   S = { teams: names.map(n => ({name:n, pos:0, cams:new Set(), ok:0, tot:0})),
-        cur: 0, busy: false, pool: {}, idx: {} };
+        cur: 0, busy: false, pool: {}, idx: {}, posBag: [] };
   D.order.forEach(k => { S.pool[k] = shuffle(D.questions[k].map((_, i) => i)); S.idx[k] = 0; });
   document.getElementById('scr-setup').classList.add('hide');
   document.getElementById('scr-win').classList.add('hide');
@@ -349,10 +349,26 @@ function arrive(){
 
 // ---------- QUESTION ----------
 let pending = null;
+
+// Sac de positions : A, B, C et D sortent chacune une fois par groupe de
+// quatre questions. Aucune lettre ne peut donc dominer une partie.
+function nextPos(){
+  if (S.posBag.length === 0) S.posBag = shuffle([0,1,2,3]);
+  return S.posBag.pop();
+}
+
 function openQ(key){
   if (S.idx[key] >= D.questions[key].length){ S.pool[key] = shuffle(S.pool[key]); S.idx[key] = 0; }
   const q = D.questions[key][S.pool[key][S.idx[key]++]];
-  pending = {key: key, q: q};
+
+  // Les options sont remélangées à chaque tirage et la bonne réponse placée
+  // à la position fournie par le sac.
+  const target = nextPos();
+  const good = q.options[q.correct];
+  const opts = q.options.filter((_, j) => j !== q.correct);
+  shuffle(opts);
+  opts.splice(target, 0, good);
+  pending = {key: key, q: q, options: opts, correct: target};
 
   document.getElementById('mkicker').textContent = 'Question';
   document.getElementById('mteam').textContent = solo ? 'À vous' : S.teams[S.cur].name;
@@ -362,7 +378,7 @@ function openQ(key){
   document.getElementById('btn-next').classList.add('hide');
 
   const box = document.getElementById('opts'); box.innerHTML = '';
-  q.options.forEach((o, i) => {
+  opts.forEach((o, i) => {
     const b = document.createElement('button');
     b.className = 'opt'; b.textContent = String.fromCharCode(65+i) + '.  ' + o;
     b.onclick = () => answer(i);
@@ -375,10 +391,10 @@ function answer(i){
   const q = pending.q, key = pending.key, t = S.teams[S.cur];
   document.querySelectorAll('#opts .opt').forEach((b, j) => {
     b.disabled = true;
-    if (j === q.correct) b.classList.add('good');
+    if (j === pending.correct) b.classList.add('good');
     else if (j === i) b.classList.add('bad');
   });
-  const good = (i === q.correct);
+  const good = (i === pending.correct);
   t.tot++; if (good) t.ok++;
 
   const fb = document.getElementById('fb');
